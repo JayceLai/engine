@@ -1,3 +1,4 @@
+import { Vec3 } from '../../core';
 /**
  * @packageDocumentation
  * @hidden
@@ -21,3 +22,4 @@ export function maxComponent (v: IVec3Like) {
     return Math.max(v.x, Math.max(v.y, v.z));
 }
 
+export const VEC3_0 = new Vec3();

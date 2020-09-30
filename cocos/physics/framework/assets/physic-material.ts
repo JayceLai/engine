@@ -102,7 +102,7 @@ export class PhysicMaterial extends Asset {
     private static _idCounter: number = 0;
 
     @serializable
-    private _friction = 0.5;
+    private _friction = 0.6;
 
     @serializable
     private _rollingFriction = 0.1;
@@ -111,7 +111,7 @@ export class PhysicMaterial extends Asset {
     private _spinningFriction = 0.1;
 
     @serializable
-    private _restitution = 0.1;
+    private _restitution = 0.0;
 
     constructor () {
         super();
