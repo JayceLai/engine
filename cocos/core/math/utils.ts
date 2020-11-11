@@ -108,6 +108,13 @@ export function randomRange (min: number, max: number) {
     return Math.random() * (max - min) + min;
 }
 
+export function randomVec3<T extends IVec3Like> (min: IVec3Like, max: IVec3Like, out: T): T {
+    out.x = randomRange(min.x, max.x);
+    out.y = randomRange(min.y, max.y);
+    out.z = randomRange(min.z, max.z);
+    return out;
+}
+
 /**
  * @en Returns a random integer between min (inclusive) and max (exclusive).<br/>
  * @zh 返回最小(包含)和最大(不包含)之间的随机整数。

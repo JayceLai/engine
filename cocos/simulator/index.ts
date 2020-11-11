@@ -1,6 +1,5 @@
-export { Particle } from './particle';
 
-export { ParticleCom } from './components/particle-com';
-export { FireworkCom } from './components/firework-com';
+export * from './components/particle';
+export * from './components/firework';
 
-export { ParticleSys } from './components/particle-sys';
+// export * from './assets/particle-template';
