@@ -489,7 +489,7 @@ export class PhysicsSystem extends System {
         this.updateCollisionMatrix();
         this.raycastResultPool.reset();
         this.raycastResults.length = 0;
-        this.raycastOptions.mask = mask;
+        this.raycastOptions.mask = mask >>> 0;
         this.raycastOptions.maxDistance = maxDistance;
         this.raycastOptions.queryTrigger = queryTrigger;
         return this.physicsWorld.raycast(worldRay, this.raycastOptions, this.raycastResultPool, this.raycastResults);
@@ -508,7 +508,7 @@ export class PhysicsSystem extends System {
      */
     raycastClosest (worldRay: ray, mask: number = 0xffffffff, maxDistance = 10000000, queryTrigger = true): boolean {
         this.updateCollisionMatrix();
-        this.raycastOptions.mask = mask;
+        this.raycastOptions.mask = mask >>> 0;
         this.raycastOptions.maxDistance = maxDistance;
         this.raycastOptions.queryTrigger = queryTrigger;
         return this.physicsWorld.raycastClosest(worldRay, this.raycastOptions, this.raycastClosestResult);
