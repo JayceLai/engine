@@ -1,4 +1,4 @@
-import { ccclass, help, menu, disallowMultiple, ccclass } from 'cc.decorator';
+import { ccclass, help, menu, disallowMultiple } from 'cc.decorator';
 import { Component, Enum, Vec3 } from "../../core";
 import { property } from '../../core/data/class-decorator';
 
