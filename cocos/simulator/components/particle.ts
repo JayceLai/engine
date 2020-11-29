@@ -1,15 +1,4 @@
-import {
-    ccclass,
-    help,
-    executeInEditMode,
-    menu,
-    requireComponent,
-    disallowMultiple,
-    tooltip,
-    displayOrder,
-    serializable,
-    type,
-} from 'cc.decorator';
+import { ccclass, help, menu, disallowMultiple } from 'cc.decorator';
 import { Component, Vec3 } from "../../core";
 import { property } from '../../core/data/class-decorator';
 
@@ -66,6 +55,12 @@ export class Particle extends Component {
     @property
     fixedTime = 1 / 60;
 
+    @property
+    k1 = 0;
+
+    @property
+    k2 = 0;
+
     /**
      * 总的累计时间
      */
@@ -83,10 +78,11 @@ export class Particle extends Component {
         }
         this.accumulator += dt;
         while (this.accumulator > this.fixedTime) {
+            this.updateForce(this.fixedTime);
             this.integrate(this.fixedTime);
+            this.clearForce();
             this.accumulator -= this.fixedTime;
         }
-        this.force.set(0, 0, 0);
         this.node.setWorldPosition(this.position);
     }
 
@@ -102,17 +98,40 @@ export class Particle extends Component {
         // Update linear position.
         // new_p = old_p + v * t;
         Vec3.scaleAndAdd(position, position, velocity, duration);
+
         // Work out the acceleration from the force.
         // new_a = old_a + total_f * (1 / m)
         let resultingAcc = acceleration.clone();
         Vec3.scaleAndAdd(resultingAcc, resultingAcc, forceAccum, inverseMass);
+
         // Update linear velocity from the acceleration.
         // new_v = old_v + a * t;
         Vec3.scaleAndAdd(velocity, velocity, resultingAcc, duration);
+
         // Impose drag.
         // damping 1
         // Vec3.multiplyScalar(velocity, velocity, Math.pow(damping, duration));
         // damping 2
         Vec3.multiplyScalar(velocity, velocity, Math.pow(1 - damping, duration));
+    }
+
+    clearForce () {
+        this.force.set(0, 0, 0);
+    }
+
+    addForce (force: Vec3) {
+        this.force.add(force);
+    }
+
+    updateForce (duration: number): void {
+        // 作用力： 重力，使用重力加速度方案代替
+        // this.addForce(gravity*mass)
+
+        // 作用力： 空气阻力，与速度相关， fdrag = −˙p * k1 * |˙p| + k2 * |˙p|2
+        // 速度较小时，主要受到 k1 系数的影响；速度较大时，主要受到 k2 系数的影响；
+        const speed = this.velocity.length();
+        const dragCoeff = this.k1 * speed + this.k2 * speed * speed;
+        const dragForce = Vec3.multiplyScalar(new Vec3(), this.velocity, -dragCoeff);
+        this.addForce(dragForce);
     }
 }
