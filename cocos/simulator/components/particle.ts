@@ -74,6 +74,9 @@ export class Particle extends Component {
     @property
     springForce = new SpringForce();
 
+    @property
+    bouyancyForce = new BuoyancyForce();
+
     /**
      * 总的累计时间
      */
@@ -234,7 +237,7 @@ class BuoyancyForce implements ForceGenerator {
     volume: number = 1;
 
     @property
-    waterHeight: number = 0;
+    waterHeight: number = Number.MIN_VALUE;
 
     @property
     liquidDensity: number = 1000; // kg / m³
