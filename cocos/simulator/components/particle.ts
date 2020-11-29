@@ -201,10 +201,15 @@ class SpringForce implements ForceGenerator {
     @property(Particle)
     other: Particle | null = null;
 
+    // 锚点
+    @property
+    anchor = new Vec3();
+
     updateForce (p: Particle, dt: number) {
         if (this.k == 0) return;
         // 根据胡克定律 F = k * △X
         let dir = Vec3.subtract(new Vec3(), p.position, this.other ? this.other.position : p.initPosition);
+        dir.subtract(this.anchor);
         let DX = this.L - dir.length();
         if (DX == 0) return;
         dir.normalize();
