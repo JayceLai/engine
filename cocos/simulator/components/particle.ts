@@ -1,12 +1,22 @@
 import { ccclass, help, menu, disallowMultiple } from 'cc.decorator';
-import { Component, Vec3 } from "../../core";
+import { Component, Enum, Vec3 } from "../../core";
 import { property } from '../../core/data/class-decorator';
+
+export enum EBodyType {
+    STATIC = 1,
+    DYNAMIC = 2,
+    KINEMATIC = 4,
+}
+Enum(EBodyType);
 
 @ccclass('cc.simulator.Particle')
 @help('i18n:cc.simulator.Particle')
 @menu('Simulator/Particle')
 @disallowMultiple
 export class Particle extends Component {
+
+    @property({ type: EBodyType })
+    type = EBodyType.DYNAMIC;
 
     /**
     * Holds the amount of damping applied to linear
@@ -56,10 +66,13 @@ export class Particle extends Component {
     fixedTime = 1 / 60;
 
     @property
-    k1 = 0;
+    gravityForce = new GravityForce();
 
     @property
-    k2 = 0;
+    dragForce = new DragForce();
+
+    @property
+    springForce = new SpringForce();
 
     /**
      * 总的累计时间
@@ -67,9 +80,14 @@ export class Particle extends Component {
     accumulator = 0;
 
     position = new Vec3();
+    initPosition = new Vec3();
 
     __preload () {
-        this.inverseMass = 1 / this.mass;
+        this.inverseMass = this.mass <= 0 ? 0 : 1 / this.mass;
+    }
+
+    onLoad () {
+        Vec3.copy(this.initPosition, this.node.worldPosition);
     }
 
     update (dt: number) {
@@ -87,6 +105,7 @@ export class Particle extends Component {
     }
 
     integrate (duration: number): void {
+        if ((this.type & EBodyType.DYNAMIC) === 0) return;
         // assert(duration > 0.0);
         const position = this.position;
         const velocity = this.velocity;
@@ -120,18 +139,77 @@ export class Particle extends Component {
     }
 
     addForce (force: Vec3) {
+        if ((this.type & EBodyType.DYNAMIC) === 0) return;
         this.force.add(force);
     }
 
     updateForce (duration: number): void {
-        // 作用力： 重力，使用重力加速度方案代替
-        // this.addForce(gravity*mass)
+        if ((this.type & EBodyType.DYNAMIC) === 0) return;
+        this.gravityForce.updateForce(this, duration);
+        this.dragForce.updateForce(this, duration);
+        this.springForce.updateForce(this, duration);
+    }
+}
 
+interface ForceGenerator {
+    updateForce (p: Particle, dt: number): void;
+}
+
+@ccclass('cc.simulator.GravityForce')
+class GravityForce implements ForceGenerator {
+
+    @property
+    gravity = new Vec3(0, -10, 0);
+
+    updateForce (p: Particle, dt: number) {
+        p.addForce(Vec3.multiplyScalar(new Vec3(), this.gravity, p.mass));
+    }
+}
+// cclegacy.GravityForce = GravityForce;
+
+@ccclass('cc.simulator.DragForce')
+class DragForce implements ForceGenerator {
+
+    @property
+    k1 = 0;
+
+    @property
+    k2 = 0;
+
+    updateForce (p: Particle, dt: number) {
         // 作用力： 空气阻力，与速度相关， fdrag = −˙p * k1 * |˙p| + k2 * |˙p|2
         // 速度较小时，主要受到 k1 系数的影响；速度较大时，主要受到 k2 系数的影响；
-        const speed = this.velocity.length();
+        const speed = p.velocity.length();
         const dragCoeff = this.k1 * speed + this.k2 * speed * speed;
-        const dragForce = Vec3.multiplyScalar(new Vec3(), this.velocity, -dragCoeff);
-        this.addForce(dragForce);
+        const dragForce = Vec3.multiplyScalar(new Vec3(), p.velocity, -dragCoeff);
+        p.addForce(dragForce);
+    }
+}
+
+@ccclass('cc.simulator.SpringForce')
+class SpringForce implements ForceGenerator {
+
+    // 弹簧劲/刚度系数
+    @property
+    k = 0;
+
+    // 弹簧静止长度
+    @property
+    L = 1;
+
+    // 弹簧链接的另一个质点
+    @property(Particle)
+    other: Particle | null = null;
+
+    updateForce (p: Particle, dt: number) {
+        if (this.k == 0) return;
+        // 根据胡克定律 F = k * △X
+        let dir = Vec3.subtract(new Vec3(), p.position, this.other ? this.other.position : p.initPosition);
+        let DX = this.L - dir.length();
+        if (DX == 0) return;
+        dir.normalize();
+        let F = dir.multiplyScalar(this.k * DX);
+        p.addForce(F);
+        if (this.other) this.other.addForce(F.multiplyScalar(-1));
     }
 }
