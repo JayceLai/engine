@@ -205,6 +205,9 @@ class SpringForce implements ForceGenerator {
     @property
     anchor = new Vec3();
 
+    @property
+    bungee = false;
+
     updateForce (p: Particle, dt: number) {
         if (this.k == 0) return;
         // 根据胡克定律 F = k * △X
@@ -212,6 +215,8 @@ class SpringForce implements ForceGenerator {
         dir.subtract(this.anchor);
         let DX = this.L - dir.length();
         if (DX == 0) return;
+        // 橡皮筋仅在拉伸时施加弹力
+        if (this.bungee && DX < 0) return;
         dir.normalize();
         let F = dir.multiplyScalar(this.k * DX);
         p.addForce(F);
