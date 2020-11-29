@@ -1,4 +1,4 @@
-import { ccclass, help, menu, disallowMultiple } from 'cc.decorator';
+import { ccclass, help, menu, disallowMultiple, ccclass } from 'cc.decorator';
 import { Component, Enum, Vec3 } from "../../core";
 import { property } from '../../core/data/class-decorator';
 
@@ -221,5 +221,46 @@ class SpringForce implements ForceGenerator {
         let F = dir.multiplyScalar(this.k * DX);
         p.addForce(F);
         if (this.other) this.other.addForce(F.multiplyScalar(-1));
+    }
+}
+
+@ccclass('cc.simulator.BuoyancyForce')
+class BuoyancyForce implements ForceGenerator {
+
+    @property
+    maxDepth: number = 1;
+
+    @property
+    volume: number = 1;
+
+    @property
+    waterHeight: number = 0;
+
+    @property
+    liquidDensity: number = 1000; // kg / m³
+
+    updateForce (p: Particle, dt: number): void {
+        /**
+         * s 表示最大的潜入深度，在该值时对象将会完全潜入
+         * d 表示侵入量
+         * y0 表示质点高度，yw 表示水面高度
+         * 
+         * d = (y0 - yw - s)/(2 * s)
+         * 
+         * d <= 0            0
+         * d >= 1            volume * density
+         * 0 <  d  <  1      d * volume * density
+         */
+        if (p.position.y >= this.waterHeight + this.maxDepth) return;
+
+        let bouyancy = new Vec3();
+        if (p.position.y <= this.waterHeight - this.maxDepth) {
+            bouyancy.y = this.liquidDensity * this.volume;
+            p.addForce(bouyancy);
+        } else {
+            let d = (p.position.y - this.waterHeight - this.maxDepth) / 2 * this.maxDepth; // (2 * this.maxDepth) ?
+            bouyancy.y = this.liquidDensity * this.volume * d;
+            p.addForce(bouyancy);
+        }
     }
 }
