@@ -163,9 +163,13 @@ interface ForceGenerator {
 class GravityForce implements ForceGenerator {
 
     @property
+    enable = true;
+
+    @property
     gravity = new Vec3(0, -10, 0);
 
     updateForce (p: Particle, dt: number) {
+        if (!this.enable) return;
         p.addForce(Vec3.multiplyScalar(new Vec3(), this.gravity, p.mass));
     }
 }
@@ -175,12 +179,16 @@ class GravityForce implements ForceGenerator {
 class DragForce implements ForceGenerator {
 
     @property
+    enable = true;
+
+    @property
     k1 = 0;
 
     @property
     k2 = 0;
 
     updateForce (p: Particle, dt: number) {
+        if (!this.enable) return;
         // 作用力： 空气阻力，与速度相关， fdrag = −˙p * k1 * |˙p| + k2 * |˙p|2
         // 速度较小时，主要受到 k1 系数的影响；速度较大时，主要受到 k2 系数的影响；
         const speed = p.velocity.length();
@@ -192,6 +200,9 @@ class DragForce implements ForceGenerator {
 
 @ccclass('cc.simulator.SpringForce')
 class SpringForce implements ForceGenerator {
+
+    @property
+    enable = true;
 
     // 弹簧劲/刚度系数
     @property
@@ -213,6 +224,7 @@ class SpringForce implements ForceGenerator {
     bungee = false;
 
     updateForce (p: Particle, dt: number) {
+        if (!this.enable) return;
         if (this.k == 0) return;
         // 根据胡克定律 F = k * △X
         let dir = Vec3.subtract(new Vec3(), p.position, this.other ? this.other.position : p.initPosition);
@@ -232,18 +244,22 @@ class SpringForce implements ForceGenerator {
 class BuoyancyForce implements ForceGenerator {
 
     @property
+    enable = true;
+
+    @property
     maxDepth: number = 1;
 
     @property
     volume: number = 1;
 
     @property
-    waterHeight: number = Number.MIN_VALUE;
+    waterHeight: number = -1e32;
 
     @property
     liquidDensity: number = 1000; // kg / m³
 
     updateForce (p: Particle, dt: number): void {
+        if (!this.enable) return;
         /**
          * s 表示最大的潜入深度，在该值时对象将会完全潜入
          * d 表示侵入量
@@ -266,9 +282,9 @@ class BuoyancyForce implements ForceGenerator {
         //     bouyancy.y = this.liquidDensity * this.volume * d;
         //     p.addForce(bouyancy);
         // }
-        
+
         if (p.position.y >= this.waterHeight + this.maxDepth / 2) return;
-        
+
         let bouyancy = new Vec3();
         let d = Math.abs((p.position.y - this.waterHeight - this.maxDepth / 2) / this.maxDepth);
         d = Math.sqrt(d);

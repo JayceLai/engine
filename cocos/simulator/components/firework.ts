@@ -6,7 +6,7 @@ export class Firework extends Particle {
     /**
      * 用于标记烟火粒子的激活状态
      */
-    type = 1;
+    state = 1;
 
     /**
      * 用于标记烟火粒子的生命
@@ -14,12 +14,12 @@ export class Firework extends Particle {
     age = 5;
 
     update (dt: number) {
-        if (this.type == 0) return;
+        if (this.state == 0) return;
         // Update our physical state
         super.update(dt);
         // We work backward from our age to zero.
         this.age -= dt;
-        if (this.age <= 0) this.type = 0;
+        if (this.age <= 0) this.state = 0;
     }
 }
 
@@ -101,7 +101,7 @@ export class FireworkSystem extends Component {
         const node = instantiate(template.render);
         this.node.addChild(node);
         const firework = node.addComponent(Firework);
-        firework.type = 1;
+        firework.state = 1;
         firework.enabled = false;
         firework.age = randomRange(this.age.min, this.age.max);
         randomVec3(this.velocity.min, this.velocity.max, firework.velocity);
@@ -128,7 +128,7 @@ export class FireworkSystem extends Component {
         const len = this.fireworks.length;
         let dirty = true;
         for (let i = 0; i < len; i++) {
-            if (this.fireworks[i].type != 0) dirty = false;
+            if (this.fireworks[i].state != 0) dirty = false;
             this.fireworks[i].update(dt);
         }
         if (this.loop && dirty) {
@@ -142,7 +142,7 @@ export class FireworkSystem extends Component {
             const element = this.templates[i];
             for (let j = 0; j < element.count; j++) {
                 const fw = this.fireworks[curI];
-                fw.type = 1;
+                fw.state = 1;
                 fw.accumulator = 0;
                 Vec3.copy(fw.position, this.node.worldPosition);
                 fw.age = randomRange(this.age.min, this.age.max);

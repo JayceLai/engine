@@ -28,3 +28,4 @@ legacyCC.primitives = primitives;
 export * from '../cocos/core/primitive/primitive';
 import * as simulator from '../cocos/simulator';
 export { simulator };
+legacyCC.simulator = simulator;
