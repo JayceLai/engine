@@ -151,6 +151,7 @@ export class Particle extends Component {
         this.gravityForce.updateForce(this, duration);
         this.dragForce.updateForce(this, duration);
         this.springForce.updateForce(this, duration);
+        this.bouyancyForce.updateForce(this, duration);
     }
 }
 
@@ -254,16 +255,25 @@ class BuoyancyForce implements ForceGenerator {
          * d >= 1            volume * density
          * 0 <  d  <  1      d * volume * density
          */
-        if (p.position.y >= this.waterHeight + this.maxDepth) return;
+        // if (p.position.y >= this.waterHeight + this.maxDepth) return;
 
+        // let bouyancy = new Vec3();
+        // if (p.position.y <= this.waterHeight - this.maxDepth) {
+        //     bouyancy.y = this.liquidDensity * this.volume;
+        //     p.addForce(bouyancy);
+        // } else {
+        //     let d = (p.position.y - this.waterHeight - this.maxDepth) / 2 * this.maxDepth; // (2 * this.maxDepth) ?
+        //     bouyancy.y = this.liquidDensity * this.volume * d;
+        //     p.addForce(bouyancy);
+        // }
+        
+        if (p.position.y >= this.waterHeight + this.maxDepth / 2) return;
+        
         let bouyancy = new Vec3();
-        if (p.position.y <= this.waterHeight - this.maxDepth) {
-            bouyancy.y = this.liquidDensity * this.volume;
-            p.addForce(bouyancy);
-        } else {
-            let d = (p.position.y - this.waterHeight - this.maxDepth) / 2 * this.maxDepth; // (2 * this.maxDepth) ?
-            bouyancy.y = this.liquidDensity * this.volume * d;
-            p.addForce(bouyancy);
-        }
+        let d = Math.abs((p.position.y - this.waterHeight - this.maxDepth / 2) / this.maxDepth);
+        d = Math.sqrt(d);
+        d = d < 1 ? d : 1;
+        bouyancy.y = d * this.liquidDensity * this.volume;
+        p.addForce(bouyancy);
     }
 }
