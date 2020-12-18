@@ -22,6 +22,7 @@ export interface IBaseShape extends ILifecycle, IGroupMask {
     // setAttachedBody: (body: RigidBody | null) => void;
     getAABB: (v: aabb) => void;
     getBoundingSphere: (v: sphere) => void;
+    updateEventListener: () => void;
 }
 
 export interface IBoxShape extends IBaseShape {

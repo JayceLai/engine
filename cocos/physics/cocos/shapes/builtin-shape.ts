@@ -9,6 +9,7 @@ import { Node } from '../../../core';
 import { aabb, sphere } from '../../../core/geometry';
 
 export class BuiltinShape implements IBaseShape {
+    updateEventListener (): void { }
     getAABB (v: aabb) { }
     getBoundingSphere (v: sphere) { }
     setMaterial (v: PhysicMaterial | null) { }
