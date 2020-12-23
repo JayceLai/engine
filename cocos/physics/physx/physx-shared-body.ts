@@ -257,6 +257,8 @@ export class PhysXSharedBody {
             PX.IMPL_PTR[this._impl.$$.ptr] = null;
             delete PX.IMPL_PTR[this._impl.$$.ptr];
             this._impl.release();
+        } else {
+            this._impl.release();
         }
         PhysXSharedBody.sharedBodesMap.delete(this.node.uuid);
     }

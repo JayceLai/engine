@@ -96,7 +96,7 @@ export class PhysXShape implements IBaseShape {
         } else {
             PX.IMPL_PTR[this.id] = null;
             delete PX.IMPL_PTR[this.id];
-            // this._impl.release();
+            this._impl.release();
         }
     }
 

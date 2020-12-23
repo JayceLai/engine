@@ -190,13 +190,15 @@ export class PhysXWorld implements IPhysicsWorld {
                     }
                 }
             });
-            simulation.setOnTrigger((pairs: any) => {
-                for (let i = 0; i < pairs.length; i++) {
-                    const cp = pairs[i];
-                    if (cp.getFlags() & 3) continue;
-                    const events = cp.getStatus();
-                    const ca = cp.getTriggerShape();
-                    const cb = cp.getOtherShape();
+            simulation.setOnTrigger((pairs: any[], pairsBuf: ArrayBuffer) => {
+                const length = pairs.length / 4;
+                const ui16View = new Uint16Array(pairsBuf);
+                for (let i = 0; i < length; i++) {
+                    const flags = ui16View[i];
+                    if (flags & 3) continue;
+                    const events = ui16View[i + 1];
+                    const ca = pairs[i * 4 + 1];
+                    const cb = pairs[i * 4 + 3];
                     const shapeA = getWrapShape<PhysXShape>(ca);
                     const shapeB = getWrapShape<PhysXShape>(cb);
                     const key = `${getImplPtr(ca)}-${getImplPtr(cb)}`;
