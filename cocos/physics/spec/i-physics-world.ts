@@ -26,5 +26,6 @@ export interface IPhysicsWorld {
     raycastClosest (worldRay: ray, options: IRaycastOptions, out: PhysicsRayResult): boolean;
     emitEvents (): void;
     syncSceneToPhysics (): void;
+    syncPhysicsToScene (): void;
     updateCollisionMatrix (group: number, mask: number): void;
 }

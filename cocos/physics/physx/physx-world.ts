@@ -1,6 +1,6 @@
 import { ray } from '../../core/geometry';
 import { IPhysicsWorld, IRaycastOptions } from '../spec/i-physics-world';
-import { CollisionEventType, PhysicMaterial, PhysicsRayResult, TriggerEventType } from '../framework';
+import { CollisionEventType, PhysicMaterial, PhysicsRayResult, PhysicsSystem, TriggerEventType } from '../framework';
 import { Node, RecyclePool } from '../../core';
 import { IVec3Like } from '../../core/math/type-define';
 import { IBaseConstraint } from '../spec/i-physics-constraint';
@@ -141,7 +141,7 @@ export class PhysXWorld implements IPhysicsWorld {
     readonly physics: any;
     readonly scene: any;
     readonly cooking: any;
-
+    readonly useMutiThread: boolean;
     readonly queryfilterData: any;
     readonly singleResult: any;
     readonly mutipleResults: any;
@@ -153,6 +153,7 @@ export class PhysXWorld implements IPhysicsWorld {
     protected mutipleResultSize = 12;
 
     constructor () {
+        this.useMutiThread = true;
         if (USE_BYTEDANCE) {
             // const physics = PX.createPhysics();
             const physics = PX.physics;
@@ -160,14 +161,14 @@ export class PhysXWorld implements IPhysicsWorld {
             const cooking = PX.createCooking(cp);
             const sceneDesc = physics.createSceneDesc();
             const simulation = new PX.SimulationEventCallback();
-            simulation.setOnContact((_header: any, pairs: any) => {
-                const shapes = _header.shapes as any[];
+            simulation.setOnContact((header: any, pairs: any) => {
+                const shapes = header.shapes as any[];
                 /**
                  * uint16   ContactPairFlags
                  * uint16   PairFlags
                  * uint16   ContactCount
                  */
-                const pairBuf = _header.pairBuffer as ArrayBuffer;
+                const pairBuf = header.pairBuffer as ArrayBuffer;
                 const pairL = shapes.length / 2;
                 const ui16View = new Uint16Array(pairBuf, 0, pairL * 3);
                 for (let i = 0; i < pairL; i++) {
@@ -180,7 +181,7 @@ export class PhysXWorld implements IPhysicsWorld {
                     const shapeB = getWrapShape<PhysXShape>(shape1);
                     const events = ui16View[1];
                     const contactCount = ui16View[2];
-                    const contactBuffer = _header.contactBuffer as ArrayBuffer;
+                    const contactBuffer = header.contactBuffer as ArrayBuffer;
                     if (events & 4) {
                         onCollision('onCollisionEnter', shapeA, shapeB, contactCount, contactBuffer);
                     } else if (events & 8) {
@@ -219,6 +220,16 @@ export class PhysXWorld implements IPhysicsWorld {
             this.queryFilterCB.setPreFilter(queryCallback.preFilter);
             this.queryfilterData = { data: { word0: 0, word1: 0, word2: 0, word3: 1 }, flags: 0 };
             sceneDesc.setSimulationEventCallback(simulation);
+            sceneDesc.setFlags(PX.SceneFlag.eENABLE_CCD, true);
+            const mstc = sceneDesc.getMaxSubThreadCount();
+            this.useMutiThread = mstc > 0;
+            if (mstc > 0) {
+                this.useMutiThread = true;
+                sceneDesc.setSubThreadCount(1);
+            } else {
+                this.useMutiThread = false;
+                sceneDesc.setSubThreadCount(0);
+            }
             const scene = physics.createScene(sceneDesc);
             this.physics = physics;
             this.cooking = cooking;
@@ -245,26 +256,42 @@ export class PhysXWorld implements IPhysicsWorld {
     }
 
     step (deltaTime: number, _timeSinceLastCalled?: number, _maxSubStep = 0): void {
-        if (this.wrappedBodies.length === 0) {
-            return;
-        }
+        // if (this.wrappedBodies.length === 0) return;
         const scene = this.scene;
         if (USE_BYTEDANCE) {
             scene.simulate(deltaTime);
         } else {
             scene.simulate(deltaTime, true);
         }
+    }
+
+    syncPhysicsToScene () {
+        const scene = this.scene;
         scene.fetchResults(true);
-        for (let i = 0; i < this.wrappedBodies.length; i++) {
-            const body = this.wrappedBodies[i];
-            body.syncPhysicsToScene();
+        if (this.useMutiThread) {
+            for (let i = 0; i < this.wrappedBodies.length; i++) {
+                const body = this.wrappedBodies[i];
+                body.syncPhysicsWithCheck();
+            }
+        } else {
+            for (let i = 0; i < this.wrappedBodies.length; i++) {
+                const body = this.wrappedBodies[i];
+                body.syncPhysicsToScene();
+            }
         }
     }
 
     syncSceneToPhysics (): void {
-        for (let i = 0; i < this.wrappedBodies.length; i++) {
-            const body = this.wrappedBodies[i];
-            body.syncSceneToPhysics();
+        if (this.useMutiThread) {
+            for (let i = 0; i < this.wrappedBodies.length; i++) {
+                const body = this.wrappedBodies[i];
+                body.syncSceneWithCheck();
+            }
+        } else {
+            for (let i = 0; i < this.wrappedBodies.length; i++) {
+                const body = this.wrappedBodies[i];
+                body.syncSceneToPhysics();
+            }
         }
     }
 

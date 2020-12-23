@@ -88,4 +88,6 @@ export default class System implements ISchedulable {
      * @param dt Delta time after the last frame
      */
     postUpdate (dt: number) {}
+
+    lastUpdate (dt: number) {}
 }

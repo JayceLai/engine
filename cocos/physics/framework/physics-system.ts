@@ -258,6 +258,7 @@ export class PhysicsSystem extends System {
     readonly useCollisionMatrix: boolean;
 
     readonly useNodeChains: boolean;
+    readonly useMutiThread: boolean;
 
     private _enable = true;
     private _allowSleep = true;
@@ -317,6 +318,7 @@ export class PhysicsSystem extends System {
         this.physicsWorld.setGravity(this._gravity);
         this.physicsWorld.setAllowSleep(this._allowSleep);
         this.physicsWorld.setDefaultMaterial(this._material);
+        this.useMutiThread = PhysicsSystem.PHYSICS_PHYSX;
     }
 
     /**
@@ -337,24 +339,42 @@ export class PhysicsSystem extends System {
         }
 
         if (this._autoSimulation) {
-            this._subStepCount = 0;
             this._accumulator += deltaTime;
-            director.emit(Director.EVENT_BEFORE_PHYSICS);
-            while (this._subStepCount < this._maxSubSteps) {
-                if (this._accumulator > this._fixedTimeStep) {
-                    this.updateCollisionMatrix();
-                    this.physicsWorld.syncSceneToPhysics();
-                    this.physicsWorld.step(this._fixedTimeStep);
-                    this._accumulator -= this._fixedTimeStep;
-                    this._subStepCount++;
-                    this.physicsWorld.emitEvents();
-                    // TODO: nesting the dirty flag reset between the syncScenetoPhysics and the simulation to reduce calling syncScenetoPhysics.
-                    // this.physicsWorld.syncSceneToPhysics();
-                } else {
-                    this.physicsWorld.syncSceneToPhysics();
-                    break;
+            if (this.useMutiThread) {
+                director.emit(Director.EVENT_BEFORE_PHYSICS);
+                this._subStepCount = 1;
+                this.updateCollisionMatrix();
+                this.physicsWorld.syncSceneToPhysics();
+                this.physicsWorld.step(this._fixedTimeStep);
+                this._accumulator -= this._fixedTimeStep;
+            } else {
+                this._subStepCount = 0;
+                director.emit(Director.EVENT_BEFORE_PHYSICS);
+                while (this._subStepCount < this._maxSubSteps) {
+                    if (this._accumulator > this._fixedTimeStep) {
+                        this.updateCollisionMatrix();
+                        this.physicsWorld.syncSceneToPhysics();
+                        this.physicsWorld.step(this._fixedTimeStep);
+                        this.physicsWorld.syncPhysicsToScene();
+                        this._accumulator -= this._fixedTimeStep;
+                        this._subStepCount++;
+                        this.physicsWorld.emitEvents();
+                        // TODO: nesting the dirty flag reset between the syncScenetoPhysics and the simulation to reduce calling syncScenetoPhysics.
+                        // this.physicsWorld.syncSceneToPhysics();
+                    } else {
+                        this.physicsWorld.syncSceneToPhysics();
+                        break;
+                    }
                 }
+                director.emit(Director.EVENT_AFTER_PHYSICS);
             }
+        }
+    }
+
+    lastUpdate () {
+        if (this._enable && this.useMutiThread) {
+            this.physicsWorld.syncPhysicsToScene();
+            this.physicsWorld.emitEvents();
             director.emit(Director.EVENT_AFTER_PHYSICS);
         }
     }

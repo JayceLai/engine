@@ -117,7 +117,7 @@ export class PhysXRigidBody implements IRigidBody {
     setAllowSleep (v: boolean): void {
         if (this.isStaticOrKinematic) return;
         const st = this.impl.getSleepThreshold();
-        const wc = v ? Math.max(0.0, st - 0.1) : st + 0xffffffff;
+        const wc = v ? Math.max(0.0, st - 0.001) : st + 0xffffffff;
         this.impl.setWakeCounter(wc);
     }
 
@@ -207,6 +207,7 @@ export class PhysXRigidBody implements IRigidBody {
 
     applyTorque (torque: IVec3Like): void {
         if (this.isStatic) return;
+        this._sharedBody.syncSceneToPhysics();
         applyTorqueForce(this.impl, torque);
     }
 

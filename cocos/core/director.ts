@@ -1024,6 +1024,11 @@ export class Director extends EventTarget {
             eventManager.frameUpdateListeners();
             Node.bookOfChange.clear();
             this._totalFrames++;
+
+            // Last update systems
+            for (let i = 0; i < this._systems.length; ++i) {
+                this._systems[i].lastUpdate(dt);
+            }
         }
     }
 
