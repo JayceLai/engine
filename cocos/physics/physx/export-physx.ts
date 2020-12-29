@@ -2,6 +2,7 @@
 /* eslint-disable no-undef */
 import { BYTEDANCE } from 'internal:constants';
 import { IQuatLike, IVec3Like, Node, Quat, Vec3 } from '../../core';
+import { shrinkPositions } from '../utils/util';
 
 export let USE_BYTEDANCE = false;
 if (BYTEDANCE) USE_BYTEDANCE = true;
@@ -144,11 +145,11 @@ export function physXEqualsCocosQuat (trans: any, q: IQuatLike): boolean {
     return Quat.strictEquals(rot, q);
 }
 
-export function getContactData (vec: any, index: number) {
+export function getContactData (vec: any, index: number, o: number) {
     if (USE_BYTEDANCE) {
-        return index;
+        return index + o;
     } else {
-        return vec.get(index);
+        return PX.getGContacts().get(index + o);
     }
 }
 
@@ -233,7 +234,8 @@ export function setupCommonCookingParam (params: any, skipMeshClean = false, ski
     }
 }
 
-export function createConvexMesh (vertices: Float32Array | number[], cooking: any, physics: any): any {
+export function createConvexMesh (_buffer: Float32Array | number[], cooking: any, physics: any): any {
+    const vertices = shrinkPositions(_buffer);
     if (USE_BYTEDANCE) {
         const cdesc = new PX.ConvexMeshDesc();
         const verticesF32 = new Float32Array(vertices);
@@ -249,7 +251,9 @@ export function createConvexMesh (vertices: Float32Array | number[], cooking: an
         for (let i = 0; i < l; i += 3) {
             vArr.push_back({ x: vertices[i], y: vertices[i + 1], z: vertices[i + 2] });
         }
-        return cooking.createConvexMesh(vArr, physics);
+        const r = cooking.createConvexMesh(vArr, physics);
+        vArr.delete();
+        return r;
     }
 }
 
@@ -285,7 +289,9 @@ export function createTriangleMesh (vertices: Float32Array | number[], indices: 
         for (let i = 0; i < l2; i += 3) {
             iArr.push_back(indices[i]); iArr.push_back(indices[i + 1]); iArr.push_back(indices[i + 2]);
         }
-        return cooking.createTriMeshExt(vArr, iArr, physics);
+        const r = cooking.createTriMeshExt(vArr, iArr, physics);
+        vArr.delete(); iArr.delete();
+        return r;
     }
 }
 
