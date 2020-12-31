@@ -67,10 +67,6 @@ export class AmmoWorld implements IPhysicsWorld {
         if (this.bodies.length == 0 && this.ghosts.length == 0) return;
         if (timeSinceLastCalled == undefined) timeSinceLastCalled = deltaTime;
         this._btWorld.stepSimulation(timeSinceLastCalled, maxSubStep, deltaTime);
-
-        for (let i = 0; i < this.bodies.length; i++) {
-            this.bodies[i].syncPhysicsToScene();
-        }
     }
 
     syncSceneToPhysics (): void {
@@ -82,6 +78,12 @@ export class AmmoWorld implements IPhysicsWorld {
         for (let i = 0; i < this.bodies.length; i++) {
             this.bodies[i].updateDirty();
             this.bodies[i].syncSceneToPhysics();
+        }
+    }
+
+    syncPhysicsToScene (): void {
+        for (let i = 0; i < this.bodies.length; i++) {
+            this.bodies[i].syncPhysicsToScene();
         }
     }
 

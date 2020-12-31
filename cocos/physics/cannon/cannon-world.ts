@@ -64,14 +64,16 @@ export class CannonWorld implements IPhysicsWorld {
         }
     }
 
-    step (deltaTime: number, timeSinceLastCalled?: number, maxSubStep?: number) {
-        if (this.bodies.length == 0) return;
-        this._world.step(deltaTime, timeSinceLastCalled, maxSubStep);
-
+    syncPhysicsToScene (): void {
         // sync physics to scene
         for (let i = 0; i < this.bodies.length; i++) {
             this.bodies[i].syncPhysicsToScene();
         }
+    }
+
+    step (deltaTime: number, timeSinceLastCalled?: number, maxSubStep?: number) {
+        if (this.bodies.length == 0) return;
+        this._world.step(deltaTime, timeSinceLastCalled, maxSubStep);
     }
 
     raycastClosest (worldRay: ray, options: IRaycastOptions, result: PhysicsRayResult): boolean {

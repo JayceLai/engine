@@ -149,7 +149,10 @@ export function getContactData (vec: any, index: number, o: number) {
     if (USE_BYTEDANCE) {
         return index + o;
     } else {
-        return PX.getGContacts().get(index + o);
+        const gc = PX.getGContacts();
+        const data = gc.get(index + o)
+        gc.delete();
+        return data;
     }
 }
 
