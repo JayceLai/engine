@@ -1,6 +1,6 @@
 import { ray } from '../../core/geometry';
 import { IPhysicsWorld, IRaycastOptions } from '../spec/i-physics-world';
-import { CollisionEventType, PhysicMaterial, PhysicsRayResult, TriggerEventType } from '../framework';
+import { CollisionEventType, PhysicMaterial, PhysicsRayResult, PhysicsSystem, TriggerEventType } from '../framework';
 import { Node, RecyclePool } from '../../core';
 import { IVec3Like } from '../../core/math/type-define';
 import { IBaseConstraint } from '../spec/i-physics-constraint';
@@ -229,7 +229,6 @@ export class PhysXWorld implements IPhysicsWorld {
     readonly physics: any;
     readonly scene: any;
     readonly cooking: any;
-    readonly useMutiThread: boolean;
     readonly queryfilterData: any;
     readonly singleResult: any;
     readonly mutipleResults: any;
@@ -237,11 +236,11 @@ export class PhysXWorld implements IPhysicsWorld {
     readonly queryFilterCB: any;
 
     readonly wrappedBodies: PhysXSharedBody[] = [];
+    readonly useMutiThread: boolean;
 
     protected mutipleResultSize = 12;
 
     constructor () {
-        this.useMutiThread = true;
         if (USE_BYTEDANCE) {
             // const physics = PX.createPhysics();
             const physics = PX.physics;
@@ -303,20 +302,20 @@ export class PhysXWorld implements IPhysicsWorld {
             this.queryfilterData = { data: { word0: 0, word1: 0, word2: 0, word3: 1 }, flags: 0 };
             sceneDesc.setSimulationEventCallback(simulation);
             sceneDesc.setFlags(PX.SceneFlag.eENABLE_CCD, true);
-            const mstc = sceneDesc.getMaxSubThreadCount();
-            this.useMutiThread = mstc > 0;
-            if (mstc > 0) {
-                this.useMutiThread = true;
-                sceneDesc.setSubThreadCount(1);
-            } else {
-                this.useMutiThread = false;
-                sceneDesc.setSubThreadCount(0);
+            this.useMutiThread = false;
+            if (PhysicsSystem.useMutiThread) {
+                const mstc = sceneDesc.getMaxSubThreadCount();
+                if (mstc > 0) {
+                    sceneDesc.setSubThreadCount(1);
+                    this.useMutiThread = mstc > 0;
+                }
             }
             const scene = physics.createScene(sceneDesc);
             this.physics = physics;
             this.cooking = cooking;
             this.scene = scene;
         } else {
+            this.useMutiThread = PhysicsSystem.useMutiThread;
             this.singleResult = new PX.PxRaycastHit();
             this.mutipleResults = new PX.PxRaycastHitVector();
             this.mutipleResults.resize(this.mutipleResultSize, this.singleResult);
@@ -350,7 +349,7 @@ export class PhysXWorld implements IPhysicsWorld {
     syncPhysicsToScene () {
         const scene = this.scene;
         scene.fetchResults(true);
-        if (this.useMutiThread) {
+        if (PhysicsSystem.useMutiThread) {
             for (let i = 0; i < this.wrappedBodies.length; i++) {
                 const body = this.wrappedBodies[i];
                 body.syncPhysicsWithCheck();
@@ -364,7 +363,7 @@ export class PhysXWorld implements IPhysicsWorld {
     }
 
     syncSceneToPhysics (): void {
-        if (this.useMutiThread) {
+        if (PhysicsSystem.useMutiThread) {
             for (let i = 0; i < this.wrappedBodies.length; i++) {
                 const body = this.wrappedBodies[i];
                 body.syncSceneWithCheck();

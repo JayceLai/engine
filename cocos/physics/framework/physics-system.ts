@@ -258,7 +258,7 @@ export class PhysicsSystem extends System {
     readonly useCollisionMatrix: boolean;
 
     readonly useNodeChains: boolean;
-    readonly useMutiThread: boolean;
+    static useMutiThread: boolean = false;
 
     private _enable = true;
     private _allowSleep = true;
@@ -308,9 +308,11 @@ export class PhysicsSystem extends System {
                     this.collisionMatrix[`_${key}`] = config.collisionMatrix[i];
                 }
             }
+            PhysicsSystem.useMutiThread = (config as any).useMutiThread;
         } else {
             this.useCollisionMatrix = false;
             this.useNodeChains = false;
+            PhysicsSystem.useMutiThread = PhysicsSystem.PHYSICS_PHYSX;
         }
         this._material.on('physics_material_update', this._updateMaterial, this);
 
@@ -318,7 +320,6 @@ export class PhysicsSystem extends System {
         this.physicsWorld.setGravity(this._gravity);
         this.physicsWorld.setAllowSleep(this._allowSleep);
         this.physicsWorld.setDefaultMaterial(this._material);
-        this.useMutiThread = PhysicsSystem.PHYSICS_PHYSX;
     }
 
     /**
@@ -340,7 +341,7 @@ export class PhysicsSystem extends System {
 
         if (this._autoSimulation) {
             this._accumulator += deltaTime;
-            if (this.useMutiThread) {
+            if (PhysicsSystem.useMutiThread) {
                 director.emit(Director.EVENT_BEFORE_PHYSICS);
                 this._subStepCount = 1;
                 this.updateCollisionMatrix();
@@ -372,7 +373,7 @@ export class PhysicsSystem extends System {
     }
 
     lastUpdate () {
-        if (this._enable && this.useMutiThread) {
+        if (this._enable && PhysicsSystem.useMutiThread) {
             this.physicsWorld.syncPhysicsToScene();
             this.physicsWorld.emitEvents();
             director.emit(Director.EVENT_AFTER_PHYSICS);
