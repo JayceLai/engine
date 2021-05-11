@@ -1,3 +1,27 @@
+/*
+ Copyright (c) 2020 Xiamen Yaji Software Co., Ltd.
+
+ https://www.cocos.com/
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated engine source code (the "Software"), a limited,
+ worldwide, royalty-free, non-assignable, revocable and non-exclusive license
+ to use Cocos Creator solely to develop games on your target platforms. You shall
+ not use Cocos Creator software for developing other software or tools that's
+ used for developing games. You are not granted to publish, distribute,
+ sublicense, and/or sell copies of Cocos Creator.
+
+ The software or tools in this License Agreement are licensed, not sold.
+ Xiamen Yaji Software Co., Ltd. reserves all rights not expressly granted to you.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ */
 
 // @ts-check
 
@@ -6,8 +30,8 @@
  * @module physics
  */
 
-import { Asset } from '../../../core/assets/asset';
 import { ccclass, editable, serializable } from 'cc.decorator';
+import { Asset } from '../../../core/assets/asset';
 import { math } from '../../../core';
 
 /**
@@ -16,16 +40,15 @@ import { math } from '../../../core';
  * @zh
  * 物理材质。
  */
-@ccclass('cc.PhysicMaterial')
-export class PhysicMaterial extends Asset {
-
+@ccclass('cc.PhysicsMaterial')
+export class PhysicsMaterial extends Asset {
     /**
      * @en
      * Gets all physics material instances.
      * @zh
      * 获取所有的物理材质实例。
      */
-    static allMaterials: PhysicMaterial[] = [];
+    static allMaterials: PhysicsMaterial[] = [];
 
     /**
      * @en
@@ -99,10 +122,10 @@ export class PhysicMaterial extends Asset {
         }
     }
 
-    private static _idCounter: number = 0;
+    private static _idCounter = 0;
 
     @serializable
-    private _friction = 0.5;
+    private _friction = 0.6;
 
     @serializable
     private _rollingFriction = 0.1;
@@ -111,13 +134,13 @@ export class PhysicMaterial extends Asset {
     private _spinningFriction = 0.1;
 
     @serializable
-    private _restitution = 0.1;
+    private _restitution = 0.0;
 
     constructor () {
         super();
-        PhysicMaterial.allMaterials.push(this);
-        if (this._uuid == '') {
-            this._uuid = 'pm_' + PhysicMaterial._idCounter++;
+        PhysicsMaterial.allMaterials.push(this);
+        if (!this._uuid) {
+            this._uuid = `pm_${PhysicsMaterial._idCounter++}`;
         }
     }
 
@@ -128,7 +151,7 @@ export class PhysicMaterial extends Asset {
      * 克隆。
      */
     public clone () {
-        let c = new PhysicMaterial();
+        const c = new PhysicsMaterial();
         c._friction = this._friction;
         c._restitution = this._restitution;
         c._rollingFriction = this._rollingFriction;
@@ -145,14 +168,12 @@ export class PhysicMaterial extends Asset {
      */
     public destroy (): boolean {
         if (super.destroy()) {
-            let idx = PhysicMaterial.allMaterials.indexOf(this);
+            const idx = PhysicsMaterial.allMaterials.indexOf(this);
             if (idx >= 0) {
-                PhysicMaterial.allMaterials.splice(idx, 1);
+                PhysicsMaterial.allMaterials.splice(idx, 1);
             }
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
-
 }

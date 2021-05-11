@@ -57,6 +57,13 @@
                     ]
                 },
                 {
+                    "text": "physx",
+                    "entry": [
+                        "physics-physx",
+                        "physics-framework"
+                    ]
+                },
+                {
                     "text": "ammo.js",
                     "entry": [
                         "physics-ammo",
