@@ -9,7 +9,7 @@ import { createPhysicsWorld, checkPhysicsModule } from './instance';
 import { director, Director } from '../../core/director';
 import { System } from '../../core/components';
 import { PhysicMaterial } from './assets/physic-material';
-import { RecyclePool, error, game, Enum } from '../../core';
+import { RecyclePool, error, game, Enum, profiler } from '../../core';
 import { ray } from '../../core/geometry';
 import { PhysicsRayResult } from './physics-ray-result';
 import { EDITOR, DEBUG } from 'internal:constants';
@@ -323,12 +323,15 @@ export class PhysicsSystem extends System {
      * @param deltaTime the time since last frame.
      */
     postUpdate (deltaTime: number) {
+        profiler.beforePhysics();
         if (EDITOR && !legacyCC.GAME_VIEW && !this._executeInEditMode) {
+            profiler.afterPhysics();
             return;
         }
 
         if (!this._enable) {
             this.physicsWorld.syncSceneToPhysics();
+            profiler.afterPhysics();
             return;
         }
 
@@ -353,6 +356,7 @@ export class PhysicsSystem extends System {
             }
             director.emit(Director.EVENT_AFTER_PHYSICS);
         }
+        profiler.afterPhysics();
     }
 
     /**

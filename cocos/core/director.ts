@@ -49,6 +49,7 @@ import { js } from './utils';
 import { DEBUG, EDITOR, BUILD } from 'internal:constants';
 import { legacyCC } from './global-exports';
 import { errorID, error, logID, assertID } from './platform/debug';
+import { profiler } from '../../exports/base';
 
 // ----------------------------------------------------------------------------------------------------------------------
 
@@ -989,6 +990,7 @@ export class Director extends EventTarget {
             this.purgeDirector();
         }
         else if (!this._invalid) {
+            profiler.beforeUpdate();
             // calculate "global" dt
             this.calculateDeltaTime();
             const dt = this._deltaTime;
@@ -1016,7 +1018,9 @@ export class Director extends EventTarget {
                     this._systems[i].postUpdate(dt);
                 }
             }
+            profiler.afterUpdate();
 
+            profiler.beforeDraw();
             this.emit(Director.EVENT_BEFORE_DRAW);
             this._root!.frameMove(this._deltaTime);
             this.emit(Director.EVENT_AFTER_DRAW);
@@ -1024,6 +1028,7 @@ export class Director extends EventTarget {
             eventManager.frameUpdateListeners();
             Node.bookOfChange.clear();
             this._totalFrames++;
+            profiler.afterDraw();
         }
     }
 

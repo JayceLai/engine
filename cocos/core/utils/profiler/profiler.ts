@@ -69,15 +69,17 @@ interface IProfilerState {
     bufferMemory: ICounterOption;
 }
 
+const _average = 1000;
+
 const _profileInfo = {
-    frame: { desc: 'Frame time (ms)', min: 0, max: 50, average: 500 },
-    fps: { desc: 'Framerate (FPS)', below: 30, average: 500, isInteger: true },
+    frame: { desc: 'Frame time (ms)', min: 0, max: 50, average: _average },
+    fps: { desc: 'Framerate (FPS)', below: 30, average: _average, isInteger: true },
     draws: { desc: 'Draw call', isInteger: true },
     instances: { desc: 'Instance Count', isInteger: true },
     tricount: { desc: 'Triangle', isInteger: true },
-    logic: { desc: 'Game Logic (ms)', min: 0, max: 50, average: 500, color: '#080' },
-    physics: { desc: 'Physics (ms)', min: 0, max: 50, average: 500 },
-    render: { desc: 'Renderer (ms)', min: 0, max: 50, average: 500, color: '#f90' },
+    logic: { desc: 'Game Logic (ms)', min: 0, max: 50, average: _average, color: '#080' },
+    physics: { desc: 'Physics (ms)', min: 0, max: 50, average: _average },
+    render: { desc: 'Renderer (ms)', min: 0, max: 50, average: _average, color: '#f90' },
     textureMemory: { desc: 'GFX Texture Mem(M)' },
     bufferMemory: { desc: 'GFX Buffer Mem(M)'},
 };
@@ -138,13 +140,8 @@ export class Profiler {
             }
 
             legacyCC.game.off(legacyCC.Game.EVENT_RESTART, this.generateNode, this);
-            legacyCC.director.off(legacyCC.Director.EVENT_BEFORE_UPDATE, this.beforeUpdate, this);
-            legacyCC.director.off(legacyCC.Director.EVENT_AFTER_UPDATE, this.afterUpdate, this);
-            legacyCC.director.off(legacyCC.Director.EVENT_BEFORE_PHYSICS, this.beforePhysics, this);
-            legacyCC.director.off(legacyCC.Director.EVENT_AFTER_PHYSICS, this.afterPhysics, this);
-            legacyCC.director.off(legacyCC.Director.EVENT_BEFORE_DRAW, this.beforeDraw, this);
-            legacyCC.director.off(legacyCC.Director.EVENT_AFTER_DRAW, this.afterDraw, this);
-            this._showFPS = false;
+            this._showFPS = false;            
+            legacyCC.game.config.showFPS = false;
         }
     }
 
@@ -160,16 +157,10 @@ export class Profiler {
                 this._rootNode.active = true;
             }
 
-            legacyCC.director.on(legacyCC.Director.EVENT_BEFORE_UPDATE, this.beforeUpdate, this);
-            legacyCC.director.on(legacyCC.Director.EVENT_AFTER_UPDATE, this.afterUpdate, this);
-            legacyCC.director.on(legacyCC.Director.EVENT_BEFORE_PHYSICS, this.beforePhysics, this);
-            legacyCC.director.on(legacyCC.Director.EVENT_AFTER_PHYSICS, this.afterPhysics, this);
-            legacyCC.director.on(legacyCC.Director.EVENT_BEFORE_DRAW, this.beforeDraw, this);
-            legacyCC.director.on(legacyCC.Director.EVENT_AFTER_DRAW, this.afterDraw, this);
-
             this._showFPS = true;
             this._canvasDone = true;
             this._statsDone = true;
+            legacyCC.game.config.showFPS = true;
         }
     }
 
@@ -346,11 +337,7 @@ export class Profiler {
         }
 
         const now = performance.now();
-        if (legacyCC.director.isPaused()) {
-            (this._stats.frame.counter as PerfCounter).start(now);
-        } else {
-            (this._stats.logic.counter as PerfCounter).end(now);
-        }
+        (this._stats.logic.counter as PerfCounter).end(now - this._stats.physics.counter.value);
     }
 
     public beforePhysics () {
@@ -389,7 +376,7 @@ export class Profiler {
         (this._stats.fps.counter as PerfCounter).frame(now);
         (this._stats.render.counter as PerfCounter).end(now);
 
-        if (now - this.lastTime < 500) {
+        if (now - this.lastTime < _average) {
             return;
         }
         this.lastTime = now;
