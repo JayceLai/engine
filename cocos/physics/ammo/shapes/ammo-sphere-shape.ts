@@ -29,22 +29,20 @@
  */
 
 /* eslint-disable new-cap */
-import Ammo from '../ammo-instantiated';
+// import Ammo from '../ammo-instantiated';
 import { AmmoShape } from './ammo-shape';
 import { SphereCollider } from '../../../../exports/physics-framework';
-import { cocos2AmmoVec3 } from '../ammo-util';
+import { cocos2AmmoVec3, cocos2BulletVec3 } from '../ammo-util';
 import { AmmoBroadphaseNativeTypes } from '../ammo-enum';
 import { ISphereShape } from '../../spec/i-physics-shape';
 import { CC_V3_0 } from '../ammo-const';
+import { bt } from '../export-bullet';
+import { absMaxComponent } from '../../../core';
 
 export class AmmoSphereShape extends AmmoShape implements ISphereShape {
     setRadius (radius: number) {
-        this.impl.setUnscaledRadius(radius);
+        bt.SphereShape_setUnscaledRadius(this.impl, radius);
         this.updateCompoundTransform();
-    }
-
-    get impl () {
-        return this._btShape as Ammo.btSphereShape;
     }
 
     get collider () {
@@ -56,7 +54,7 @@ export class AmmoSphereShape extends AmmoShape implements ISphereShape {
     }
 
     onComponentSet () {
-        this._btShape = new Ammo.btSphereShape(this.collider.radius);
+        this._btShape = bt.SphereShape_create(this.collider.radius);
         this.setScale();
     }
 
@@ -64,13 +62,10 @@ export class AmmoSphereShape extends AmmoShape implements ISphereShape {
         super.setScale();
         const v3_0 = CC_V3_0;
         const ws = this._collider.node.worldScale;
-        const absX = Math.abs(ws.x);
-        const absY = Math.abs(ws.y);
-        const absZ = Math.abs(ws.z);
-        const max_sp = Math.max(Math.max(absX, absY), absZ);
+        const max_sp = Math.abs(absMaxComponent(ws));
         v3_0.set(max_sp, max_sp, max_sp);
-        cocos2AmmoVec3(this.scale, v3_0);
-        this._btShape.setLocalScaling(this.scale);
+        cocos2BulletVec3(this.scale, v3_0);
+        bt.CollisionShape_setLocalScaling(this._btShape, this.scale);
         this.updateCompoundTransform();
     }
 }

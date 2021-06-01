@@ -32,6 +32,7 @@
 import Ammo from './ammo-instantiated';
 import { Collider, TriggerEventType, CollisionEventType, IContactEquation } from '../../../exports/physics-framework';
 import { Vec3, Quat } from '../../core';
+import { bt } from './export-bullet';
 
 export const TriggerEventObject = {
     type: 'onTriggerEnter' as unknown as TriggerEventType,
@@ -54,12 +55,18 @@ export class AmmoConstant {
         if (AmmoConstant._instance == null) AmmoConstant._instance = new AmmoConstant();
         return AmmoConstant._instance;
     }
-    readonly EMPTY_SHAPE = new Ammo.btEmptyShape();
-    readonly TRANSFORM = new Ammo.btTransform();
-    readonly TRANSFORM_1 = new Ammo.btTransform();
-    readonly VECTOR3_0 = new Ammo.btVector3();
-    readonly VECTOR3_1 = new Ammo.btVector3();
-    readonly QUAT_0 = new Ammo.btQuaternion();
+    // readonly EMPTY_SHAPE = new Ammo.btEmptyShape();
+    // readonly TRANSFORM = new Ammo.btTransform();
+    // readonly TRANSFORM_1 = new Ammo.btTransform();
+    // readonly VECTOR3_0 = new Ammo.btVector3();
+    // readonly VECTOR3_1 = new Ammo.btVector3();
+    // readonly QUAT_0 = new Ammo.btQuaternion();
+    readonly EMPTY_SHAPE = bt.EmptyShape_create();
+    readonly TRANSFORM = bt.Transform_create();
+    readonly TRANSFORM_1 = bt.Transform_create();
+    readonly VECTOR3_0 = bt.Vector3_create(0, 0, 0);
+    readonly VECTOR3_1 = bt.Vector3_create(0, 0, 0);
+    readonly QUAT_0 = bt.Quaternion_create(0, 0, 0, 1);
 }
 
 export const CC_V3_0 = new Vec3();
