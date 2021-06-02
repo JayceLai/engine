@@ -50,14 +50,14 @@ selector.select('ammo.js', {
 
     BoxShape: AmmoBoxShape,
     SphereShape: AmmoSphereShape,
-    CapsuleShape: AmmoCapsuleShape,
-    TrimeshShape: AmmoTrimeshShape,
-    CylinderShape: AmmoCylinderShape,
-    ConeShape: AmmoConeShape,
-    TerrainShape: AmmoTerrainShape,
-    SimplexShape: AmmoSimplexShape,
+    // CapsuleShape: AmmoCapsuleShape,
+    // TrimeshShape: AmmoTrimeshShape,
+    // CylinderShape: AmmoCylinderShape,
+    // ConeShape: AmmoConeShape,
+    // TerrainShape: AmmoTerrainShape,
+    // SimplexShape: AmmoSimplexShape,
     PlaneShape: AmmoPlaneShape,
 
-    PointToPointConstraint: AmmoPointToPointConstraint,
-    HingeConstraint: AmmoHingeConstraint,
+    // PointToPointConstraint: AmmoPointToPointConstraint,
+    // HingeConstraint: AmmoHingeConstraint,
 });
