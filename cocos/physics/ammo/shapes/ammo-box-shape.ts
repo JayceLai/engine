@@ -29,11 +29,11 @@
  * @hidden
  */
 
-import Ammo from '../ammo-instantiated';
+// import Ammo from '../ammo-instantiated';
 import { AmmoShape } from './ammo-shape';
 import { Vec3 } from '../../../core';
 import { BoxCollider } from '../../../../exports/physics-framework';
-import { cocos2AmmoVec3, cocos2BulletVec3 } from '../ammo-util';
+import { cocos2BulletVec3 } from '../ammo-util';
 import { AmmoBroadphaseNativeTypes } from '../ammo-enum';
 import { IBoxShape } from '../../spec/i-physics-shape';
 import { IVec3Like } from '../../../core/math/type-define';
